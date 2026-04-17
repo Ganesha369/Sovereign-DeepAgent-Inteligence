@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+litellm
+deepagents
+browser-use
+playwright
+asyncpg
+pydantic
+python-dotenv
+langsmith

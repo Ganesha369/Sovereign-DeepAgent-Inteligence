@@ -98,5 +98,5 @@ async def run_unit_tests(request: TestSuiteRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Using Port 8005 for local execution to avoid conflicts
-    uvicorn.run(app, host="0.0.0.0", port=8005)
+    port = int(os.environ.get("PORT", 8005))
+    uvicorn.run(app, host="0.0.0.0", port=port)

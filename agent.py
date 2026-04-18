@@ -1,8 +1,8 @@
 import os
 from typing import Optional
 import asyncpg
-from deepagents import create_deep_agent
-from browser_use import Browser
+from browser_use import Browser, Agent
+from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,8 +10,10 @@ load_dotenv()
 class SovereignAgent:
     def __init__(self):
         # Migrated to 2026 Gemini 3 models
-        self.model = "gemini/gemini-3-flash-preview"
+        self.model = "gemini-3-flash-preview"
         self.db_url = os.getenv("DATABASE_URL")
+        self.llm = ChatGoogleGenerativeAI(model=self.model)
+        self.browser_session = Browser()
         
     async def _get_db_conn(self):
         if not self.db_url:
@@ -25,27 +27,19 @@ class SovereignAgent:
     async def run(self, prompt: str, image_url: Optional[str] = None):
         """
         PILLAR 4: MULTIMODAL SOVEREIGN AGENT
-        Uses create_deep_agent pattern with browser tools and Gemini 3.
+        Uses Agent from browser_use with Gemini 3.
         """
-        # 1. Initialize Browser and Agent
-        browser = Browser()
-        agent = create_deep_agent(
-            model=self.model,
-            tools=[browser.get_tool()]
+        # 1. Initialize Agent with browser object directly
+        self.agent = Agent(
+            task=prompt,
+            llm=self.llm,
+            browser=self.browser_session
         )
         
-        # 2. MULTIMODAL: Construct content
-        content = [{"type": "text", "text": prompt}]
-        if image_url:
-            content.append({
-                "type": "image_url", 
-                "image_url": {"url": image_url}
-            })
-            
-        # 3. Execute Task
-        result = await agent.arun(content)
+        # 2. Execute Task
+        result = await self.agent.run()
         
-        # 4. PERSISTENCE: Save to PostgreSQL (with error handling)
+        # 3. PERSISTENCE: Save to PostgreSQL (with error handling)
         await self._persist_result(prompt, str(result))
         
         return result

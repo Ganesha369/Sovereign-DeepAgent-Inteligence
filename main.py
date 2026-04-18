@@ -31,7 +31,7 @@ async def route_query(prompt: str) -> str:
     is_complex = any(word in prompt.lower() for word in complex_keywords) or len(prompt.split()) > 15
     return "SYSTEM_2" if is_complex else "SYSTEM_1"
 
-@app.post("/query")
+@app.post("/distill")
 async def handle_query(request: QueryRequest, response: Response):
     system_type = await route_query(request.prompt)
     response.headers["X-System-Type"] = system_type
@@ -49,7 +49,7 @@ async def handle_query(request: QueryRequest, response: Response):
         return {"system": system_type, "response": res}
 
 # --- PILLAR 2: SYNTHETIC FACTORY ---
-@app.post("/distill")
+@app.post("/synthetic_distill")
 async def distill_test_cases(request: QueryRequest):
     distill_prompt = f"""
     Act as a Model Distillation expert. Based on the following user query, generate 5 diverse synthetic test cases.

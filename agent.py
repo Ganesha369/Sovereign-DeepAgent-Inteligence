@@ -12,8 +12,11 @@ class SovereignAgent:
         # Migrated to 2026 Gemini 3 models
         self.model = "gemini-3-flash-preview"
         self.db_url = os.getenv("DATABASE_URL")
-        self.llm = ChatGoogleGenerativeAI(model=self.model)
-        self.llm.provider = "google"
+        self.llm = ChatGoogleGenerativeAI(
+            model=self.model, 
+            api_key=os.getenv("GEMINI_API_KEY")
+        )
+        setattr(self.llm, 'provider', 'google')
         self.browser_session = Browser()
         
     async def _get_db_conn(self):
@@ -34,8 +37,7 @@ class SovereignAgent:
         self.agent = Agent(
             task=prompt,
             llm=self.llm,
-            browser=self.browser_session,
-            use_vision=True
+            browser=self.browser_session
         )
         
         # 2. Execute Task

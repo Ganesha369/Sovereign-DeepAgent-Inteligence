@@ -7,16 +7,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class BrowserCompatibleLLM:
+    def __init__(self, llm):
+        self.llm = llm
+        self.provider = "google"
+    
+    def __getattr__(self, name):
+        return getattr(self.llm, name)
+
 class SovereignAgent:
     def __init__(self):
         # Migrated to 2026 Gemini 3 models
         self.model = "gemini-3-flash-preview"
         self.db_url = os.getenv("DATABASE_URL")
-        self.llm = ChatGoogleGenerativeAI(
+        real_llm = ChatGoogleGenerativeAI(
             model=self.model, 
             api_key=os.getenv("GEMINI_API_KEY")
         )
-        setattr(self.llm, 'provider', 'google')
+        self.llm = BrowserCompatibleLLM(real_llm)
         self.browser_session = Browser()
         
     async def _get_db_conn(self):
